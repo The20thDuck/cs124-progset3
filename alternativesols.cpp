@@ -3,32 +3,31 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
-// #include "heap.h"
-// #include "solution.h"
 
 #define MAX_ITER 25000
 
-int* sequenceGenerate(int n) {
-	// Seed RNG
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    srand((unsigned) tv.tv_usec);
+// generate sequences
+int* seqGen(int n) {
+	// rng seeding
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    srand((unsigned) t.tv_usec);
 
-    // Allocate space for sequence
-	int* s;
+    // initializing array of signs
+	int* sign;
 
 	// Assign randomly to sets
 	for (int i = 0; i < n; i++) {
 		int set = rand() & 1;
-		s[i] = (set == 1) ? 1 : -1;
+		sign[i] = (set == 1) ? 1 : -1;
 	}
 
-	return s;
+	return sign;
 }
 
 // Produces a random neighbor of a sequence
 // Returns mutated sequence
-int* sequenceNeighbor(int* s, int n) {
+int* seqNext(int* s, int n) {
 	// Produce neighbor
 	int* neighbor;
 	for (int i = 0; i < n; i++) {
@@ -52,8 +51,7 @@ int* sequenceNeighbor(int* s, int n) {
 }
 
 // Generates a random prepartitioning (using [0, n))
-// NOTE: need to free returned array
-int* partitionGenerate(int n) {
+int* partGen(int n) {
 	// Seed RNG
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -71,7 +69,7 @@ int* partitionGenerate(int n) {
 
 // Produces a random neighbor of a sequence
 // Returns mutated sequence
-int* partitionNeighbor(int* s, int n) {
+int* partNext(int* s, int n) {
 	// Produce neighbor
 	int* neighbor;
 	for (int i = 0; i < n; i++) {
@@ -132,7 +130,7 @@ long partitionResidue(long* nums, int* s, int n) {
 
     // Get residue
     long residue = kk(newNums, n);
-    free(newNums);
+
     return residue;
 }
 
@@ -148,7 +146,7 @@ long repeatedRandom(long* nums, int* start, int n, int isSequence) {
         uint64_t bestResidue = seqRes(nums, s, n);
         for (int i = 0; i < MAX_ITER; i++) {
             // Obtain random solution
-            int* randomSolution = sequenceGenerate(n);
+            int* randomSolution = seqGen(n);
             uint64_t residue = seqRes(nums, randomSolution, n);
 
             // If better, replace
@@ -161,34 +159,26 @@ long repeatedRandom(long* nums, int* start, int n, int isSequence) {
             }
 
         }
-        free(s);
+
         return bestResidue;
     } else {
-        uint64_t bestResidue = partitionResidue(nums, s, n);
+        long bestResidue = partitionResidue(nums, s, n);
         for (int i = 0; i < MAX_ITER; i++) {
             // Obtain random solution
-            int* randomSolution = partitionGenerate(n);
-            uint64_t residue = partitionResidue(nums, randomSolution, n);
+            int* randomSolution = partGen(n);
+            long residue = partitionResidue(nums, randomSolution, n);
 
             // If better, replace
             if (residue < bestResidue) {
                 bestResidue = residue;
-                free(s);
+
                 s = randomSolution;
             } else {
                 free(randomSolution);
             }
 
-                        // Write results
-            // FILE* f = fopen("data/rrp.csv", "a");
-            // if (f == NULL) {
-            //     printf("Could not open rrp.csv\n");
-            //     return -1;
-            // }
-            // fprintf(f, "%i,%llu,%llu\n", i, bestResidue, residue);
-            // fclose(f);
         }
-        free(s);
+
         return bestResidue;
     }
 }
@@ -205,46 +195,35 @@ long hillClimbing(long* nums, int* start, int n, int isSequence) {
         long bestResidue = seqRes(nums, s, n);
         for (int i = 0; i < MAX_ITER; i++) {
             // Get neighbor
-            int* neighbor = sequenceNeighbor(s, n);
+            int* neighbor = seqNext(s, n);
             uint64_t residue = seqRes(nums, neighbor, n);
 
             // If better, replace
             if (residue < bestResidue) {
                 bestResidue = residue;
-                free(s);
-                s = neighbor;
-            } else {
-                free(neighbor);
-            }
 
-            // Write results
-            // FILE* f = fopen("data/hcs.csv", "a");
-            // if (f == NULL) {
-            //     printf("Could not open hcs.csv\n");
-            //     return -1;
-            // }
-            // fprintf(f, "%i,%llu,%llu\n", i, bestResidue, residue);
-            // fclose(f);
+                s = neighbor;
+            } 
+
+
         }
-        free(s);
+
         return bestResidue;
     } else {
-        uint64_t bestResidue = partitionResidue(nums, s, n);
+        long bestResidue = partitionResidue(nums, s, n);
         for (int i = 0; i < MAX_ITER; i++) {
             // Obtain random solution
-            int* neighbor = partitionNeighbor(s, n);
+            int* neighbor = partNext(s, n);
             uint64_t residue = partitionResidue(nums, neighbor, n);
 
             // If better, replace
             if (residue < bestResidue) {
                 bestResidue = residue;
-                free(s);
+
                 s = neighbor;
-            } else {
-                free(neighbor);
-            }
+            } 
         }
-        free(s);
+
         return bestResidue;
     }
 }
@@ -270,7 +249,7 @@ long simulatedAnnealing(long* nums, int* start, int n, int isSequence) {
         long bestResidue = seqRes(nums, bestS, n);
         for (int i = 0; i < MAX_ITER; i++) {
             // Get neighbor
-            int* neighbor = sequenceNeighbor(s, n);
+            int* neighbor = seqNext(s, n);
             long residue = seqRes(nums, neighbor, n);
 
             // If better or within probability, replace
@@ -300,7 +279,7 @@ long simulatedAnnealing(long* nums, int* start, int n, int isSequence) {
         long bestResidue = partitionResidue(nums, bestS, n);
         for (int i = 0; i < MAX_ITER; i++) {
             // Get neighbor
-            int* neighbor = partitionNeighbor(s, n);
+            int* neighbor = partNext(s, n);
             long residue = partitionResidue(nums, neighbor, n);
 
             // If better or within probability, replace
@@ -308,10 +287,7 @@ long simulatedAnnealing(long* nums, int* start, int n, int isSequence) {
                 sResidue = residue;
                 free(s);
                 s = neighbor;
-            } else {
-                free(neighbor);
-            }
-
+            } 
             // Reassign best solution
             if (sResidue < bestResidue) {
                 bestResidue = sResidue;
@@ -320,8 +296,7 @@ long simulatedAnnealing(long* nums, int* start, int n, int isSequence) {
                 }
             }
         }
-        free(s);
-        free(bestS);
+        
         return bestResidue;
     }
 }
