@@ -3,11 +3,111 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
-#include "heap.h"
-#include "solution.h"
+// #include "heap.h"
+// #include "solution.h"
 
 #define MAX_ITER 25000
 
+int* sequenceGenerate(int n) {
+	// Seed RNG
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    srand((unsigned) tv.tv_usec);
+
+    // Allocate space for sequence
+	int* s;
+
+	// Assign randomly to sets
+	for (int i = 0; i < n; i++) {
+		int set = rand() & 1;
+		s[i] = (set == 1) ? 1 : -1;
+	}
+
+	return s;
+}
+
+// Produces a random neighbor of a sequence
+// Returns mutated sequence
+int* sequenceNeighbor(int* s, int n) {
+	// Produce neighbor
+	int* neighbor;
+	for (int i = 0; i < n; i++) {
+		neighbor[i] = s[i];
+	}
+
+	// Change sequence
+	int i = rand() % n;
+	neighbor[i] = -neighbor[i];
+
+	// Change second one with probability 0.5
+	if ((double) rand() / RAND_MAX > 0.5) {
+		int j = i;
+		while (j == i) {
+			j = rand() % n;
+		}
+		neighbor[j] = -neighbor[j];
+	}
+
+	return neighbor;
+}
+
+// Generates a random prepartitioning (using [0, n))
+// NOTE: need to free returned array
+int* partitionGenerate(int n) {
+	// Seed RNG
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    srand((unsigned) tv.tv_usec);
+
+    int* s;
+
+    // Assign randomly to partition
+    for (int i = 0; i < n; i++) {
+    	s[i] = rand() % n;
+    }
+
+    return s;
+}
+
+// Produces a random neighbor of a sequence
+// Returns mutated sequence
+int* partitionNeighbor(int* s, int n) {
+	// Produce neighbor
+	int* neighbor;
+	for (int i = 0; i < n; i++) {
+		neighbor[i] = s[i];
+	}
+
+	// Produce neighbor
+	int i = rand() % n;
+	int j = neighbor[i];
+
+	// Ensure that different number gets assigned
+	while (j == neighbor[i]) {
+		j = rand() % n;
+	}
+
+	neighbor[i] = j;
+
+	return neighbor;
+}
+
+// Converts a sequence solution into a partition solution
+int* sequenceToPartition(int* s, int n) {
+	int* p;
+	for (int i = 0; i < n; i++) {
+		p[i] = (s[i] == 1) ? 1 : 0;
+	}
+	return p;
+}
+
+// Prints set passed in, whether solution or prepartition
+void printSolution(int* s, int n) {
+	for (int i = 0; i < n; i++) {
+		printf("%4i ", s[i]);
+	}
+	printf("\n");
+}
 
 // Calculates residue for a sequence solution
 long seqRes(long* nums, int* sign, int n) {
@@ -21,7 +121,7 @@ long seqRes(long* nums, int* sign, int n) {
 // Calculates residue for a prepartition solution
 long partitionResidue(long* nums, int* s, int n) {
     // Calculate new numbers based on prepartition
-    long* newNums = malloc(n, sizeof(long));
+    long* newNums;
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             if (s[j] == i) {
@@ -39,7 +139,7 @@ long partitionResidue(long* nums, int* s, int n) {
 // Uses repeated random to find a solution to number partition
 long repeatedRandom(long* nums, int* start, int n, int isSequence) {
     // Keep track of s; can't use passed in pointer (mutable)
-    int* s = malloc(sizeof(int) * n);
+    int* s;
     for (int i = 0; i < n; i++) {
         s[i] = start[i];
     }
@@ -94,15 +194,15 @@ long repeatedRandom(long* nums, int* start, int n, int isSequence) {
 }
 
 // Uses hill climbing to find a solution
-uint64_t hillClimbing(uint64_t* nums, int* start, int n, int isSequence) {
+long hillClimbing(long* nums, int* start, int n, int isSequence) {
     // Keep track of s; can't use passed in pointer (mutable)
-    int* s = malloc(sizeof(int) * n);
+    int* s;
     for (int i = 0; i < n; i++) {
         s[i] = start[i];
     }
 
     if (isSequence) {
-        uint64_t bestResidue = seqRes(nums, s, n);
+        long bestResidue = seqRes(nums, s, n);
         for (int i = 0; i < MAX_ITER; i++) {
             // Get neighbor
             int* neighbor = sequenceNeighbor(s, n);
@@ -143,15 +243,6 @@ uint64_t hillClimbing(uint64_t* nums, int* start, int n, int isSequence) {
             } else {
                 free(neighbor);
             }
-
-            // Write results
-            // FILE* f = fopen("data/hcp.csv", "a");
-            // if (f == NULL) {
-            //     printf("Could not open hcp.csv\n");
-            //     return -1;
-            // }
-            // fprintf(f, "%i,%llu,%llu\n", i, bestResidue, residue);
-            // fclose(f);
         }
         free(s);
         return bestResidue;
@@ -164,10 +255,10 @@ double cooling(int iter) {
 }
 
 // Uses simulated annealing to find a solution
-uint64_t simulatedAnnealing(uint64_t* nums, int* start, int n, int isSequence) {
+long simulatedAnnealing(long* nums, int* start, int n, int isSequence) {
     // Keep track of s and bestS; can't use passed in pointer (mutable)
-    int* s = malloc(sizeof(int) * n);
-    int* bestS = malloc(sizeof(int) * n);
+    int* s;
+    int* bestS;
     for (int i = 0; i < n; i++) {
         s[i] = start[i];
         bestS[i] = start[i];
@@ -175,15 +266,15 @@ uint64_t simulatedAnnealing(uint64_t* nums, int* start, int n, int isSequence) {
 
 
     if (isSequence) {
-        uint64_t sResidue = sequenceResidue(nums, s, n);
-        uint64_t bestResidue = sequenceResidue(nums, bestS, n);
+        long sResidue = seqRes(nums, s, n);
+        long bestResidue = seqRes(nums, bestS, n);
         for (int i = 0; i < MAX_ITER; i++) {
             // Get neighbor
             int* neighbor = sequenceNeighbor(s, n);
-            uint64_t residue = sequenceResidue(nums, neighbor, n);
+            long residue = seqRes(nums, neighbor, n);
 
             // If better or within probability, replace
-            if (residue < sResidue || (double) rand() / RAND_MAX < exp((int64_t) (sResidue - residue) / cooling(i))) {
+            if (residue < sResidue || (double) rand() / RAND_MAX < exp((long) (sResidue - residue) / cooling(i))) {
                 sResidue = residue;
                 free(s);
                 s = neighbor;
@@ -199,25 +290,18 @@ uint64_t simulatedAnnealing(uint64_t* nums, int* start, int n, int isSequence) {
                 }
             }
 
-            // Write results
-            // FILE* f = fopen("data/sas.csv", "a");
-            // if (f == NULL) {
-            //     printf("Could not open sas.csv\n");
-            //     return -1;
-            // }
-            // fprintf(f, "%i,%llu,%llu,%llu\n", i, bestResidue, sResidue, residue);
-            // fclose(f);
+
         }
         free(s);
         free(bestS);
         return bestResidue;
     } else {
-        uint64_t sResidue = partitionResidue(nums, s, n);
-        uint64_t bestResidue = partitionResidue(nums, bestS, n);
+        long sResidue = partitionResidue(nums, s, n);
+        long bestResidue = partitionResidue(nums, bestS, n);
         for (int i = 0; i < MAX_ITER; i++) {
             // Get neighbor
             int* neighbor = partitionNeighbor(s, n);
-            uint64_t residue = partitionResidue(nums, neighbor, n);
+            long residue = partitionResidue(nums, neighbor, n);
 
             // If better or within probability, replace
             if (residue < sResidue || (double) rand() / RAND_MAX < exp((int64_t) (sResidue - residue) / cooling(i))) {
