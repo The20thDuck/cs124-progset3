@@ -1,2 +1,2 @@
-make:	kk.cpp
-	g++ -o kk kk.cpp
+make:	kk.cpp alternativesols.cpp
+	g++ -o kk kk.cpp alternativesols.cpp
