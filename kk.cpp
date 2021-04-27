@@ -47,6 +47,7 @@ public:
         }
         if (largest != i) {
             std::swap(harr[i], harr[largest]);
+            maxHeapify(largest);
         }
     }
     void buildHeap() {
@@ -67,7 +68,7 @@ public:
         assert(heap_size <= N);
         int pos = heap_size-1;
         harr[pos] = v;
-        while (pos >= 0 && harr[parent(pos)] < harr[pos]) {
+        while (pos > 0 && harr[parent(pos)] < harr[pos]) {
             std::swap(harr[parent(pos)], harr[pos]);
             pos = parent(pos);
         }
@@ -83,7 +84,9 @@ public:
 
 long karmarkarKarp(MaxHeap h) {
     while (h.heap_size > 1) {
+        // h.printHeap();
         long a = h.extractMax();
+        // h.printHeap();
         long b = h.extractMax();
         h.insert(abs(a-b));
     }
@@ -122,7 +125,7 @@ void test() {
     }
 
     
-    for (int method = 3; method < 7; method++) {
+    for (int method = 0; method < 7; method++) {
         long total_residue = 0;
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         for (int i = 0; i < NUMCASES; i++) {
@@ -164,7 +167,7 @@ void test() {
         }
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         int t = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-        printf("Method %d, ave residue: %ld, Time (ms): %d\n", method, total_residue/NUMCASES, t);
+        printf("Method %d, ave residue: %ld, Total Time (ms): %d\n", method, total_residue/NUMCASES, t);
     }
 }
 
@@ -179,10 +182,11 @@ int main(int argc, char* argv[]) {
         FILE* input = fopen(argv[1], "r");
         
         MaxHeap h(N);
-        for (int i = 0; i < N; i++) {
-            int r = getline(&line, &len, input);
-            assert (r != -1);
+        while (getline(&line, &len, input) > 0) {
+            // int r = ;
+            // assert (r != -1);
             long d = atol(line);
+            // printf("%ld\n", d);
             h.insert(d);
         }
         long dif = karmarkarKarp(h);
