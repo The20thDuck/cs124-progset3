@@ -252,7 +252,7 @@ long simulatedAnnealing(long* nums, int n, int isSequence)
             long residue = seqRes(nums, std[1-S], n);
 
 
-            if (residue < sRes || (double) rand() / RAND_MAX < exp((long) (sRes - residue) / cooling(i))) 
+            if (((double) rand() / RAND_MAX) < exp((long) (sRes - residue) / cooling(i)) || residue < sRes) 
             {
                 sRes = residue;
                 S = 1-S;
@@ -289,7 +289,7 @@ long simulatedAnnealing(long* nums, int n, int isSequence)
             long residue = partRes(nums, prePart[1-P], n);
 
 
-            if (residue < sRes || (double) rand() / RAND_MAX < exp((long) (sRes - residue) / cooling(i))) 
+            if (((double) rand() / RAND_MAX) < exp((long) (sRes - residue) / cooling(i)) || residue < sRes) 
             {
                 sRes = residue;
                 P = 1-P;
