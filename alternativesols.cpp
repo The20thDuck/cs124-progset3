@@ -17,15 +17,29 @@ void seqGen(int n, int s[])
 	for (int i = 0; i < n; i++) 
     {
 		int set = rand() & 1;
+
 		s[i] = (set == 1) ? 1 : -1;
 	}
 
 	return;
 }
 
+
+
+// Generates a random prepartitioning )
+void partGen(int n, int s[]) {
+    // Assign randomly to partition
+    for (int i = 0; i < n; i++) 
+    {
+    	s[i] = rand() % n;
+    }
+
+    return;
+}
+
 // Generates a random neighbor of a sequence and returns mutated sequence
 void seqNext(int s[], int neighbor[], int n) {
-	// Produce neighbor
+
 	for (int i = 0; i < n; i++) 
     {
 		neighbor[i] = s[i];
@@ -44,17 +58,6 @@ void seqNext(int s[], int neighbor[], int n) {
 		neighbor[j] = -neighbor[j];
 	}
 	return;
-}
-
-// Generates a random prepartitioning (using [0, n))
-void partGen(int n, int s[]) {
-    // Assign randomly to partition
-    for (int i = 0; i < n; i++) 
-    {
-    	s[i] = rand() % n;
-    }
-
-    return;
 }
 
 // Produces a random neighbor of a sequence
@@ -80,143 +83,40 @@ void partNext(int s[], int neighbor[], int n) {
 	return;
 }
 
-// Prints set passed in, whether solution or prepartition
-void printSolution(int* s, int n) {
-	for (int i = 0; i < n; i++) {
-		printf("%4i ", s[i]);
-	}
-	printf("\n");
-}
 
 // Calculates residue for a sequence solution
-long seqRes(long* nums, int* sign, int n) {
+long seqRes(long* nums, int* s, int n) {
     long residue = 0;
     for (int i = 0; i < n; i++) {
-        residue += sign[i] * nums[i];
+        residue += s[i] * nums[i];
     }
     return abs(residue);
 }
 
 
-int standard[3][N]; 
-int bestS = 0;
+int std[3][N]; 
+int S = 0;
 
-long newNums[N];
+long partNums[N];
 int prePart[3][N];
-int bestP = 0;
+int P = 0;
 
 // Calculates residue for a prepartition solution
-long partitionResidue(long* nums, int* s, int n) {
+long partRes(long* nums, int* s, int n) {
     // Calculate new numbers based on prepartition
     for (int i = 0; i < n; i++) 
     {
-        newNums[i] = 0;
+        partNums[i] = 0;
     }
     for (int j = 0; j < n; j++) 
     {
-        newNums[s[j]] += nums[j];
+        partNums[s[j]] += nums[j];
     }
 
     // Get residue
-    long residue = karmarkarKarp(newNums, n);
+    long residue = karmarkarKarp(partNums, n);
 
     return residue;
-}
-
-// Uses repeated random to find a solution to number partition
-long repeatedRandom(long* nums, int n, int isSequence) 
-{
-    // Keep track of s; can't use passed in pointer (mutable)
-    assert(n <= N);
-
-
-    if (isSequence) 
-    {
-        seqGen(n, standard[bestS]);
-        long bestResidue = seqRes(nums, standard[bestS], n);
-        for (int i = 0; i < MAX_ITER; i++) 
-        {
-            // Obtain random solution
-            seqGen(n, standard[1-bestS]);
-            long residue = seqRes(nums, standard[1-bestS], n);
-
-            // If better, replace
-            if (residue < bestResidue) 
-            {
-                bestResidue = residue;
-                bestS = 1-bestS; // Swap from 0 to 1, or vice-versa
-            }
-
-        }
-
-        return bestResidue;
-    } else {
-        partGen(n, prePart[bestP]);
-        long bestResidue = partitionResidue(nums, prePart[bestP], n);
-        for (int i = 0; i < MAX_ITER; i++) 
-        {
-            // Obtain random solution
-            partGen(n, prePart[1-bestP]);
-            long residue = partitionResidue(nums, prePart[1-bestP], n);
-
-            // If better, replace
-            if (residue < bestResidue) 
-            {
-                bestResidue = residue;
-                bestS = 1-bestS;
-            }
-        }
-
-        return bestResidue;
-    }
-}
-
-// Uses hill climbing to find a solution
-long hillClimbing(long* nums, int n, int isSequence) 
-{
-    // Keep track of s; can't use passed in pointer (mutable)
-    assert(n <= N);
-
-    if (isSequence) 
-    {
-        seqGen(n, standard[bestS]);
-        long bestResidue = seqRes(nums, standard[bestS], n);
-        for (int i = 0; i < MAX_ITER; i++) 
-        {
-            // Get neighbor
-            seqNext(standard[bestS], standard[1-bestS], n);
-            long residue = seqRes(nums, standard[1-bestS], n);
-
-            // If better, replace
-            if (residue < bestResidue) 
-            {
-                bestResidue = residue;
-                bestS = 1-bestS;
-            } 
-
-
-        }
-
-        return bestResidue;
-    } else {
-        partGen(n, prePart[bestP]);
-        long bestResidue = partitionResidue(nums, prePart[bestP], n);
-        for (int i = 0; i < MAX_ITER; i++) 
-        {
-            // Obtain random solution
-            partNext(prePart[bestP], prePart[1-bestP], n);
-            long residue = partitionResidue(nums, prePart[1-bestP], n);
-
-            // If better, replace
-            if (residue < bestResidue) 
-            {
-                bestResidue = residue;
-                bestP = 1-bestP;
-            } 
-        }
-
-        return bestResidue;
-    }
 }
 
 // Cooling function for simulated annealing
@@ -225,75 +125,176 @@ double cooling(int ITER)
     return pow(10, 10) * pow(0.8, ITER / 300);
 }
 
+// Uses repeated random to find a solution to number partition
+long repeatedRandom(long* nums, int n, int seq) 
+{
+
+    assert(n <= N);
+
+
+    if (seq) 
+    {
+        seqGen(n, std[S]);
+        long optResidue = seqRes(nums, std[S], n);
+        for (int i = 0; i < MAX_ITER; i++) 
+        {
+            // Obtain random solution
+            seqGen(n, std[1-S]);
+            long residue = seqRes(nums, std[1-S], n);
+
+            // If better, replace
+            if (residue < optResidue) 
+            {
+                optResidue = residue;
+                S = 1-S; // Swap from 0 to 1, or vice-versa
+            }
+
+        }
+
+        return optResidue;
+    } 
+    else 
+    {
+        partGen(n, prePart[P]);
+        long optResidue = partRes(nums, prePart[P], n);
+        for (int i = 0; i < MAX_ITER; i++) 
+        {
+            // Obtain random solution
+            partGen(n, prePart[1-P]);
+            long residue = partRes(nums, prePart[1-P], n);
+
+            // If better, replace
+            if (residue < optResidue) 
+            {
+                optResidue = residue;
+                S = 1-S;
+            }
+        }
+
+        return optResidue;
+    }
+}
+
+// Uses hill climbing to find a solution
+long hillClimbing(long* nums, int n, int seq) 
+{
+    // Keep track of s; can't use passed in pointer (mutable)
+    assert(n <= N);
+
+    if (seq) 
+    {
+        seqGen(n, std[S]);
+        long bestResidue = seqRes(nums, std[S], n);
+        for (int i = 0; i < MAX_ITER; i++) 
+        {
+            // Get neighbor
+            seqNext(std[S], std[1-S], n);
+            long residue = seqRes(nums, std[1-S], n);
+
+            // If better, replace
+            if (residue < bestResidue) 
+            {
+                bestResidue = residue;
+                S = 1-S;
+            } 
+
+
+        }
+
+        return bestResidue;
+    } else {
+        partGen(n, prePart[P]);
+        long bestResidue = partRes(nums, prePart[P], n);
+        for (int i = 0; i < MAX_ITER; i++) 
+        {
+            // Obtain random solution
+            partNext(prePart[P], prePart[1-P], n);
+            long residue = partRes(nums, prePart[1-P], n);
+
+            // If better, replace
+            if (residue < bestResidue) 
+            {
+                bestResidue = residue;
+                P = 1-P;
+            } 
+        }
+
+        return bestResidue;
+    }
+}
+
+
+
 // Uses simulated annealing to find a solution
 long simulatedAnnealing(long* nums, int n, int isSequence) 
 {
 
     if (isSequence) {
-        seqGen(n, standard[bestS]);
+        seqGen(n, std[S]);
         for (int i = 0; i < n; i++) 
         {
-            standard[2][i] = standard[bestS][i];
+            std[2][i] = std[S][i];
         } 
-        
-        // Copy current to overall best
-        long sResidue = seqRes(nums, standard[bestS], n);
+
+        long sResidue = seqRes(nums, std[S], n);
         long bestResidue = sResidue;
         
         for (int i = 0; i < MAX_ITER; i++) 
         {
-            // Get neighbor
-            seqNext(standard[bestS], standard[1-bestS], n);
-            long residue = seqRes(nums, standard[1-bestS], n);
 
-            // If better or within probability, replace
+            seqNext(std[S], std[1-S], n);
+            long residue = seqRes(nums, std[1-S], n);
+
+
             if (residue < sResidue || (double) rand() / RAND_MAX < exp((long) (sResidue - residue) / cooling(i))) 
             {
                 sResidue = residue;
-                bestS = 1-bestS;
+                S = 1-S;
             }
 
-            // Reassign best solution
+
             if (sResidue < bestResidue) 
             {
                 bestResidue = sResidue;
                 for (int j = 0; j < n; j++) 
                 {
-                    standard[2][j] = standard[bestS][j];
+                    std[2][j] = std[S][j];
                 }
             }
 
 
         }
         return bestResidue;
-    } else 
+    } 
+    
+    else 
     {
-        partGen(n, prePart[bestP]);
+        partGen(n, prePart[P]);
         for (int i = 0; i < n; i++) 
         {
-            prePart[2][i] = prePart[bestP][i];
-        } // Copy current to overall best
-        long sResidue = partitionResidue(nums, prePart[bestP], n);
+            prePart[2][i] = prePart[P][i];
+        } 
+        long sResidue = partRes(nums, prePart[P], n);
         long bestResidue = sResidue;
         for (int i = 0; i < MAX_ITER; i++) 
         {
-            // Get neighbor
-            partNext(prePart[bestP], prePart[1-bestP], n);
-            long residue = partitionResidue(nums, prePart[1-bestP], n);
 
-            // If better or within probability, replace
+            partNext(prePart[P], prePart[1-P], n);
+            long residue = partRes(nums, prePart[1-P], n);
+
+
             if (residue < sResidue || (double) rand() / RAND_MAX < exp((long) (sResidue - residue) / cooling(i))) 
             {
                 sResidue = residue;
-                bestP = 1-bestP;
+                P = 1-P;
             } 
-            // Reassign best solution
+
             if (sResidue < bestResidue) 
             {
                 bestResidue = sResidue;
                 for (int j = 0; j < n; j++) 
                 {
-                    prePart[2][j] = prePart[bestP][j];
+                    prePart[2][j] = prePart[P][j];
                 }
             }
         }
