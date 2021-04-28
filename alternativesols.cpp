@@ -100,12 +100,12 @@ long seqRes(long* nums, int* s, int n)
 }
 
 
-int std[3][N]; 
-int S = 0;
+int std[3][N]; // Store current best standard representation, as well as random standard rep. [2] holds overall best for simulated annealing
+int S = 0; // Stores index of current best standard
 
-long partNums[N];
-int prePart[3][N];
-int P = 0;
+long partNums[N]; // Store standard representation of prepartition
+int prePart[3][N]; // Store current best prepartion representation, as well as random standard rep. [2] holds overall best for simulated annealing
+int P = 0; // Stores index of current best standard
 
 // Calculates residue for a prepartition solution
 long partRes(long* nums, int* s, int n) {
@@ -131,7 +131,7 @@ double cooling(int ITER)
     return pow(10, 10) * pow(0.8, ITER / 300);
 }
 
-// Uses repeated random to find a solution to number partition
+// solution from repeated random
 long repeatedRandom(long* nums, int n, int seq) 
 {
 
@@ -144,11 +144,11 @@ long repeatedRandom(long* nums, int n, int seq)
         long optResidue = seqRes(nums, std[S], n);
         for (int i = 0; i < MAX_ITER; i++) 
         {
-            // Obtain random solution
+            // Get the rand sol
             seqGen(n, std[1-S]);
             long residue = seqRes(nums, std[1-S], n);
 
-            // If better, replace
+            // Change with better rand sol
             if (residue < optResidue) 
             {
                 optResidue = residue;
@@ -165,11 +165,11 @@ long repeatedRandom(long* nums, int n, int seq)
         long optResidue = partRes(nums, prePart[P], n);
         for (int i = 0; i < MAX_ITER; i++) 
         {
-            // Obtain random solution
+            // Get the rand sol
             partGen(n, prePart[1-P]);
             long residue = partRes(nums, prePart[1-P], n);
 
-            // If better, replace
+            // Change with better rand sol
             if (residue < optResidue) 
             {
                 optResidue = residue;
@@ -181,10 +181,10 @@ long repeatedRandom(long* nums, int n, int seq)
     }
 }
 
-// Uses hill climbing to find a solution
+// solution found by hill climbing
 long hillClimbing(long* nums, int n, int seq) 
 {
-    // Keep track of s; can't use passed in pointer (mutable)
+
     assert(n <= N);
 
     if (seq) 
@@ -193,11 +193,11 @@ long hillClimbing(long* nums, int n, int seq)
         long bestResidue = seqRes(nums, std[S], n);
         for (int i = 0; i < MAX_ITER; i++) 
         {
-            // Get neighbor
+            
             seqNext(std[S], std[1-S], n);
             long residue = seqRes(nums, std[1-S], n);
 
-            // If better, replace
+            
             if (residue < bestResidue) 
             {
                 bestResidue = residue;
@@ -213,11 +213,11 @@ long hillClimbing(long* nums, int n, int seq)
         long bestResidue = partRes(nums, prePart[P], n);
         for (int i = 0; i < MAX_ITER; i++) 
         {
-            // Obtain random solution
+            // Get the rand sol
             partNext(prePart[P], prePart[1-P], n);
             long residue = partRes(nums, prePart[1-P], n);
 
-            // If better, replace
+            // Change with better rand sol
             if (residue < bestResidue) 
             {
                 bestResidue = residue;
@@ -231,7 +231,7 @@ long hillClimbing(long* nums, int n, int seq)
 
 
 
-// Uses simulated annealing to find a solution
+// solution from simulated annealing 
 long simulatedAnnealing(long* nums, int n, int isSequence) 
 {
 
@@ -242,8 +242,8 @@ long simulatedAnnealing(long* nums, int n, int isSequence)
             std[2][i] = std[S][i];
         } 
 
-        long sResidue = seqRes(nums, std[S], n);
-        long bestResidue = sResidue;
+        long sRes = seqRes(nums, std[S], n);
+        long bRes = sRes;
         
         for (int i = 0; i < MAX_ITER; i++) 
         {
@@ -252,16 +252,16 @@ long simulatedAnnealing(long* nums, int n, int isSequence)
             long residue = seqRes(nums, std[1-S], n);
 
 
-            if (residue < sResidue || (double) rand() / RAND_MAX < exp((long) (sResidue - residue) / cooling(i))) 
+            if (residue < sRes || (double) rand() / RAND_MAX < exp((long) (sRes - residue) / cooling(i))) 
             {
-                sResidue = residue;
+                sRes = residue;
                 S = 1-S;
             }
 
 
-            if (sResidue < bestResidue) 
+            if (sRes < bRes) 
             {
-                bestResidue = sResidue;
+                bRes = sRes;
                 for (int j = 0; j < n; j++) 
                 {
                     std[2][j] = std[S][j];
@@ -270,7 +270,7 @@ long simulatedAnnealing(long* nums, int n, int isSequence)
 
 
         }
-        return bestResidue;
+        return bRes;
     } 
     
     else 
@@ -280,8 +280,8 @@ long simulatedAnnealing(long* nums, int n, int isSequence)
         {
             prePart[2][i] = prePart[P][i];
         } 
-        long sResidue = partRes(nums, prePart[P], n);
-        long bestResidue = sResidue;
+        long sRes = partRes(nums, prePart[P], n);
+        long bRes = sRes;
         for (int i = 0; i < MAX_ITER; i++) 
         {
 
@@ -289,15 +289,15 @@ long simulatedAnnealing(long* nums, int n, int isSequence)
             long residue = partRes(nums, prePart[1-P], n);
 
 
-            if (residue < sResidue || (double) rand() / RAND_MAX < exp((long) (sResidue - residue) / cooling(i))) 
+            if (residue < sRes || (double) rand() / RAND_MAX < exp((long) (sRes - residue) / cooling(i))) 
             {
-                sResidue = residue;
+                sRes = residue;
                 P = 1-P;
             } 
 
-            if (sResidue < bestResidue) 
+            if (sRes < bRes) 
             {
-                bestResidue = sResidue;
+                bRes = sRes;
                 for (int j = 0; j < n; j++) 
                 {
                     prePart[2][j] = prePart[P][j];
@@ -305,6 +305,6 @@ long simulatedAnnealing(long* nums, int n, int isSequence)
             }
         }
         
-        return bestResidue;
+        return bRes;
     }
 }
