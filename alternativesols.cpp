@@ -31,11 +31,10 @@ void seqNext(int s[], int neighbor[], int n) {
 		neighbor[i] = s[i];
 	}
 
-	// Change sequence
 	int i = rand() % n;
 	neighbor[i] = -neighbor[i];
 
-	// Change second one with probability 0.5
+	
 	if ((double) rand() / RAND_MAX > 0.5) {
 		int j = i;
 		while (j == i) 
@@ -59,7 +58,6 @@ void partGen(int n, int s[]) {
 }
 
 // Produces a random neighbor of a sequence
-// Returns mutated sequence
 void partNext(int s[], int neighbor[], int n) {
 	// Produce neighbor
 	for (int i = 0; i < n; i++) 
@@ -82,16 +80,6 @@ void partNext(int s[], int neighbor[], int n) {
 	return;
 }
 
-// Converts a sequence solution into a partition solution
-int* sequenceToPartition(int* s, int n) 
-{
-	int* p;
-	for (int i = 0; i < n; i++) {
-		p[i] = (s[i] == 1) ? 1 : 0;
-	}
-	return p;
-}
-
 // Prints set passed in, whether solution or prepartition
 void printSolution(int* s, int n) {
 	for (int i = 0; i < n; i++) {
@@ -110,12 +98,12 @@ long seqRes(long* nums, int* sign, int n) {
 }
 
 
-int standard[3][N]; // Store current best standard representation, as well as random standard rep. [2] holds overall best for simulated annealing
-int bestS = 0; // Stores index of current best standard
+int standard[3][N]; 
+int bestS = 0;
 
-long newNums[N]; // Store standard representation of prepartition
-int prePart[3][N]; // Store current best prepartion representation, as well as random standard rep. [2] holds overall best for simulated annealing
-int bestP = 0; // Stores index of current best standard
+long newNums[N];
+int prePart[3][N];
+int bestP = 0;
 
 // Calculates residue for a prepartition solution
 long partitionResidue(long* nums, int* s, int n) {
@@ -141,9 +129,6 @@ long repeatedRandom(long* nums, int n, int isSequence)
     // Keep track of s; can't use passed in pointer (mutable)
     assert(n <= N);
 
-    // for (int i = 0; i < n; i++) {
-    //     s[i] = start[i];
-    // }
 
     if (isSequence) 
     {
@@ -254,6 +239,7 @@ long simulatedAnnealing(long* nums, int n, int isSequence)
         // Copy current to overall best
         long sResidue = seqRes(nums, standard[bestS], n);
         long bestResidue = sResidue;
+        
         for (int i = 0; i < MAX_ITER; i++) 
         {
             // Get neighbor
