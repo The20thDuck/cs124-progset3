@@ -18,7 +18,7 @@ void seqGen(int n, int s[])
     {
 		int set = rand() & 1;
 
-		s[i] = (set == 1) ? 1 : -1;
+		s[i] = (set != 1) ? -1 : 1;
 	}
 
 	return;
@@ -38,59 +38,65 @@ void partGen(int n, int s[]) {
 }
 
 // Generates a random neighbor of a sequence and returns mutated sequence
-void seqNext(int s[], int neighbor[], int n) {
+void seqNext(int s[], int next[], int n) {
+    int r = rand() % n;
 
 	for (int i = 0; i < n; i++) 
     {
-		neighbor[i] = s[i];
+		next[i] = s[i];
 	}
 
-	int i = rand() % n;
-	neighbor[i] = -neighbor[i];
-
 	
-	if ((double) rand() / RAND_MAX > 0.5) {
-		int j = i;
-		while (j == i) 
+	next[r] = -next[r];
+
+	int j = r;
+	if ((double) rand() / RAND_MAX <= 0.5) 
+    {
+		
+		while (j == r) 
         {
 			j = rand() % n;
 		}
-		neighbor[j] = -neighbor[j];
+		next[j] = -next[j];
 	}
 	return;
 }
 
 // Produces a random neighbor of a sequence
-void partNext(int s[], int neighbor[], int n) {
-	// Produce neighbor
+void partNext(int s[], int next[], int n) {
+	int r = rand() % n;
+    
+    // Produce neighbor
 	for (int i = 0; i < n; i++) 
     {
-		neighbor[i] = s[i];
+		next[i] = s[i];
 	}
 
 	// Produce neighbor
-	int i = rand() % n;
-	int j = neighbor[i];
+	
+	int j = next[r];
 
 	// Ensure that different number gets assigned
-	while (j == neighbor[i]) 
+	while (j == next[r]) 
     {
 		j = rand() % n;
 	}
 
-	neighbor[i] = j;
+	next[r] = j;
 
 	return;
 }
 
 
 // Calculates residue for a sequence solution
-long seqRes(long* nums, int* s, int n) {
-    long residue = 0;
-    for (int i = 0; i < n; i++) {
-        residue += s[i] * nums[i];
+long seqRes(long* nums, int* s, int n) 
+{
+    long res = 0;
+    for (int i = 0; i < n; i++) 
+    {
+        res += s[i] * nums[i];
     }
-    return abs(residue);
+    return abs(res);
 }
 
 
