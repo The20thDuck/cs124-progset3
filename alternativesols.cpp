@@ -100,7 +100,7 @@ long seqRes(long* nums, int* s, int n)
 }
 
 
-int std[3][N]; // Store current best standard representation, as well as random standard rep. [2] holds overall best for simulated annealing
+int stdRep[3][N]; // Store current best standard representation, as well as random standard rep. [2] holds overall best for simulated annealing
 int S = 0; // Stores index of current best standard
 
 long partNums[N]; // Store standard representation of prepartition
@@ -140,13 +140,13 @@ long repeatedRandom(long* nums, int n, int seq)
 
     if (seq) 
     {
-        seqGen(n, std[S]);
-        long optResidue = seqRes(nums, std[S], n);
+        seqGen(n, stdRep[S]);
+        long optResidue = seqRes(nums, stdRep[S], n);
         for (int i = 0; i < MAX_ITER; i++) 
         {
             // Get the rand sol
-            seqGen(n, std[1-S]);
-            long residue = seqRes(nums, std[1-S], n);
+            seqGen(n, stdRep[1-S]);
+            long residue = seqRes(nums, stdRep[1-S], n);
 
             // Change with better rand sol
             if (residue < optResidue) 
@@ -189,13 +189,13 @@ long hillClimbing(long* nums, int n, int seq)
 
     if (seq) 
     {
-        seqGen(n, std[S]);
-        long bestResidue = seqRes(nums, std[S], n);
+        seqGen(n, stdRep[S]);
+        long bestResidue = seqRes(nums, stdRep[S], n);
         for (int i = 0; i < MAX_ITER; i++) 
         {
             
-            seqNext(std[S], std[1-S], n);
-            long residue = seqRes(nums, std[1-S], n);
+            seqNext(stdRep[S], stdRep[1-S], n);
+            long residue = seqRes(nums, stdRep[1-S], n);
 
             
             if (residue < bestResidue) 
@@ -236,20 +236,20 @@ long simulatedAnnealing(long* nums, int n, int isSequence)
 {
 
     if (isSequence) {
-        seqGen(n, std[S]);
+        seqGen(n, stdRep[S]);
         for (int i = 0; i < n; i++) 
         {
-            std[2][i] = std[S][i];
+            stdRep[2][i] = stdRep[S][i];
         } 
 
-        long sRes = seqRes(nums, std[S], n);
+        long sRes = seqRes(nums, stdRep[S], n);
         long bRes = sRes;
         
         for (int i = 0; i < MAX_ITER; i++) 
         {
 
-            seqNext(std[S], std[1-S], n);
-            long residue = seqRes(nums, std[1-S], n);
+            seqNext(stdRep[S], stdRep[1-S], n);
+            long residue = seqRes(nums, stdRep[1-S], n);
 
 
             if (((double) rand() / RAND_MAX) < exp((long) (sRes - residue) / cooling(i)) || residue < sRes) 
@@ -264,7 +264,7 @@ long simulatedAnnealing(long* nums, int n, int isSequence)
                 bRes = sRes;
                 for (int j = 0; j < n; j++) 
                 {
-                    std[2][j] = std[S][j];
+                    stdRep[2][j] = stdRep[S][j];
                 }
             }
 

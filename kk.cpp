@@ -88,7 +88,7 @@ long karmarkarKarp(MaxHeap h) {
         long a = h.extractMax();
         // h.printHeap();
         long b = h.extractMax();
-        h.insert(abs(a-b));
+        h.insert(labs(a-b));
     }
     return h.extractMax();
 }
@@ -176,20 +176,59 @@ int main(int argc, char* argv[]) {
     if (argc == 1) {
         test();
     }
-    if (argc == 2) {
+    if (argc == 4) {
         char* line = NULL;
         size_t len;
-        FILE* input = fopen(argv[1], "r");
-        
-        MaxHeap h(N);
+
+        int flag = atol(argv[1]);
+        int alg = atol(argv[2]);
+        FILE* input = fopen(argv[3], "r");
+
+        long a[N];
+
+        int i = 0;
         while (getline(&line, &len, input) > 0) {
             // int r = ;
             // assert (r != -1);
             long d = atol(line);
             // printf("%ld\n", d);
-            h.insert(d);
+            a[i] = d;
+            i++;
         }
-        long dif = karmarkarKarp(h);
+        long dif;
+        switch (alg)
+        {
+        case 0:
+            dif = karmarkarKarp(a, i);
+            break;
+        
+        case 1:
+            dif = repeatedRandom(a, i, 1);
+            break;
+
+        case 11:
+            dif = repeatedRandom(a, i, 0);
+            break;
+        
+        case 2:
+            dif = hillClimbing(a, i, 1);
+            break;
+
+        case 12:
+            dif = hillClimbing(a, i, 0);
+            break;
+        
+        case 3:
+            dif = simulatedAnnealing(a, i, 1);
+            break;
+
+        case 13:
+            dif = simulatedAnnealing(a, i, 0);
+            break;
+
+        default:
+            break;
+        }
         printf("%ld\n", dif);
     }
 }
